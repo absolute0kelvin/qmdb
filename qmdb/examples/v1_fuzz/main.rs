@@ -153,8 +153,8 @@ fn run_fuzz_single_round(
             if v.len() == 0 {
                 continue;
             }
-            let (size, ok) = shared_ads.read_entry(height, &kh[..], &k[..], &mut buf);
-            if !ok {
+            let size = shared_ads.read_entry(height, &kh[..], &k[..], &mut buf);
+            if size == 0 {
                 panic!("Cannot read entry");
             }
             if buf[..size] != v[..] {

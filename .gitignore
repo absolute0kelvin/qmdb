@@ -40,3 +40,4 @@ qmdb_results.txt
 qmdb_results.json
 
 .envrc
+/qmdb/test_tree_get_proof

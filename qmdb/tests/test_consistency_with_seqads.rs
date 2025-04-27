@@ -79,22 +79,22 @@ fn test_consistency() {
     shared_ads.insert_extra_data(1, "".to_owned());
     sleep(3 * Duration::from_secs(3));
     let mut bz = [0; 300];
-    let (size, found_it) = ads.get_shared().read_entry(1, &key_hash, &address, &mut bz);
-    assert!(found_it);
+    let size = ads.get_shared().read_entry(1, &key_hash, &address, &mut bz);
+    assert!(size != 0);
     let entry_bz = EntryBz { bz: &bz[..size] };
     assert_eq!(entry_bz.value(), &[2; 20]);
     let mut bz = [0; 300];
-    let (size, found_it) = ads
+    let size = ads
         .get_shared()
         .read_entry(1, &key_hash2, &address2, &mut bz);
-    assert!(found_it);
+    assert!(size != 0);
     let entry_bz = EntryBz { bz: &bz[..size] };
     assert_eq!(entry_bz.value(), &[4; 20]);
     let mut bz = [0; 300];
-    let (size, found_it) = ads
+    let size = ads
         .get_shared()
         .read_entry(1, &key_hash3, &address3, &mut bz);
-    assert!(found_it);
+    assert!(size != 0);
     let entry_bz = EntryBz { bz: &bz[..size] };
     assert_eq!(entry_bz.value(), &[6; 20]);
     let root = ads.get_metadb().read().get_root_hash(shard_id as usize);

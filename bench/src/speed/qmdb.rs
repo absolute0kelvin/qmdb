@@ -75,8 +75,8 @@ pub fn read_kv(shared_ads: &SharedAdsWrap, key_list: &Vec<[u8; 52]>) {
             let mut buf = [0; DEFAULT_ENTRY_SIZE];
             for k in key_list.iter() {
                 let kh = hasher::hash(&k[..]);
-                let (_, ok) = shared_ads.read_entry(-1, &kh[..], &[], &mut buf);
-                if !ok {
+                let size = shared_ads.read_entry(-1, &kh[..], &[], &mut buf);
+                if size == 0 {
                     panic!("Cannot read entry kh={:?} ", kh);
                 }
             }

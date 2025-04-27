@@ -193,7 +193,7 @@ impl<T: Task + 'static> ADS for SeqAdsWrap<T> {
         key_hash: &[u8],
         key: &[u8],
         buf: &mut [u8],
-    ) -> (usize, bool) {
+    ) -> usize {
         let shard_id = byte0_to_shard_id(key_hash[0]);
         let mut size = 0;
         let mut found_it = false;
@@ -226,13 +226,13 @@ impl<T: Task + 'static> ADS for SeqAdsWrap<T> {
                 }
                 found_it // stop loop if key matches
             });
-        (size, found_it)
+        if !found_it {
+            return 0;
+        }
+        size
     }
 
-    fn warmup<F>(&self, _: i64, _: &[u8], _: F)
-    where
-        F: FnMut(EntryBz),
-    {
+    fn warmup(&self, _: i64, _: &[u8]) {
         todo!()
     }
 

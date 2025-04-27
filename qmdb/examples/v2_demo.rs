@@ -80,7 +80,7 @@ fn main() {
     let kh = hasher::hash(&k[..]);
     // now we use another shared_ads to read entry out
     let shared_ads = ads.get_shared();
-    let (n, ok) = shared_ads.read_entry(-1, &kh[..], &[], &mut buf);
+    let n = shared_ads.read_entry(-1, &kh[..], &[], &mut buf);
     let e = EntryBz { bz: &buf[..n] };
-    println!("entry={:?} value={:?} ok={}", &buf[..n], e.value(), ok);
+    println!("entry={:?} value={:?} ok={}", &buf[..n], e.value(), n != 0);
 }

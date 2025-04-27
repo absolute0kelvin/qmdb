@@ -439,10 +439,7 @@ impl AdsCore {
         }
     }
 
-    pub fn warmup_cache<F>(&self, height: i64, k80: &[u8], cache: &EntryCache, mut access: F)
-    where
-        F: FnMut(EntryBz),
-    {
+    pub fn warmup_cache(&self, height: i64, k80: &[u8], cache: &EntryCache) {
         let k64 = BigEndian::read_u64(&k80[..8]);
         let shard_id = (k64 >> 60) as usize;
         let mut buf = [0u8; DEFAULT_ENTRY_SIZE];
@@ -469,7 +466,6 @@ impl AdsCore {
             let key_hash = entry_bz.key_hash();
             if key_hash[..10] == k80[..10] {
                 cache.insert(shard_id, file_pos, &entry_bz);
-                access(entry_bz);
             }
             false
         });
@@ -482,7 +478,7 @@ impl AdsCore {
         key: &[u8],
         cache: Option<&EntryCache>,
         buf: &mut [u8],
-    ) -> (usize, bool) {
+    ) -> usize {
         let shard_id = key_hash[0] as usize * 256 / SHARD_DIV;
         let mut size = 0;
         let mut found_it = false;
@@ -516,7 +512,10 @@ impl AdsCore {
             }
             found_it // stop loop if key matches
         });
-        (size, found_it)
+        if !found_it {
+            return 0;
+        }
+        size
     }
 
     pub fn add_task(&self, task_id: i64) {
@@ -789,15 +788,10 @@ impl<T: Task + 'static> AdsWrap<T> {
 }
 
 pub trait ADS: Send + Sync + 'static {
-    fn read_entry(&self, height: i64, key_hash: &[u8], key: &[u8], buf: &mut [u8])
-        -> (usize, bool);
-    fn warmup<F>(&self, height: i64, k80: &[u8], access: F)
-    where
-        F: FnMut(EntryBz);
+    fn read_entry(&self, height: i64, key_hash: &[u8], key: &[u8], buf: &mut [u8]) -> usize;
+    fn warmup(&self, height: i64, k80: &[u8]);
     fn add_task(&self, task_id: i64);
-
     fn insert_extra_data(&self, height: i64, data: String);
-
     fn get_root_hash_of_height(&self, height: i64) -> [u8; 32];
 }
 
@@ -808,7 +802,7 @@ impl ADS for SharedAdsWrap {
         key_hash: &[u8],
         key: &[u8],
         buf: &mut [u8],
-    ) -> (usize, bool) {
+    ) -> usize {
         let cache = if height < 0 {
             None
         } else {
@@ -817,11 +811,8 @@ impl ADS for SharedAdsWrap {
         self.ads.read_entry(height, key_hash, key, cache, buf)
     }
 
-    fn warmup<F>(&self, height: i64, k80: &[u8], access: F)
-    where
-        F: FnMut(EntryBz),
-    {
-        self.ads.warmup_cache(height, k80, &self.cache, access);
+    fn warmup(&self, height: i64, k80: &[u8]) {
+        self.ads.warmup_cache(height, k80, &self.cache);
     }
 
     fn add_task(&self, task_id: i64) {
